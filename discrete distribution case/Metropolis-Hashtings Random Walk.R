@@ -1,25 +1,23 @@
-# target distribution N(10,2). Say we dont know how to sample from it
-target <- function(x){
-  (1/sqrt(2*pi*2^2))*exp((-(x-10)^2)/(2*2^2))
+target = function(x){
+  runif(x)
 }
 
-# proposed dist, we know how to sample from it easily
-proposed <- function(x){
-  rnorm(1,mean=x,sd=1)
+x = rep(0,2000)
+x[0] = 3     #initialize; I've set arbitrarily set this to 3
+for(i in 1:2001){
+  current_x = x[i-1]
+  proposed_x = current_x + rnorm(1,mean=0,sd=1) # random walk
+  A = target(proposed_x)/target(current_x) 
+  
+  if(runif(1)<A){
+    x[i] = proposed_x       # accept move with probabily min(1,A)
+  } else {
+    x[i] = current_x        # otherwise "reject" move, and stay where we are
+  }
 }
 
-stored <- rep(NA,10^4)
-xk <- 40 # starting point
+plot(x,main="values of x visited by the MH algorithm")
 
-for(i in 1:10^4){
-  xprime <- proposed(xk)#proposed a value 
-  ratio <- min(1,target(xprime)/target(xk)) #compare their proba
-  # if x_proposed has higher prob, then take the new value else  
-  # take the current value 
-  accept <- runif(1)< ratio
-  stored[i] <- ifelse(accept, xprime, xk)
-  xk <-stored[i]
-}
-
-plot (stored, type = 'l')
-hist(stored, breaks = 30)
+hist(x,xlim=c(0,10),probability = TRUE, main="Histogram of values of x visited by MH algorithm")
+xx = seq(0,10,length=100)
+lines(xx,target(xx),col="red")
